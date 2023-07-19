@@ -371,10 +371,13 @@ class deferring_http_channel(http_server.http_channel):
         return http_server.http_channel.handle_read(self)
 
     def close(self):
-        self.producer_fifo = fifo([
-            p for p in self.producer_fifo
-            if getattr(p.callback, "muticall", False)
-        ])
+        if len(self.producer_fifo):
+            items = []
+            for p in self.producer_fifo:
+                callback = getattr(p, "callback", None)
+                if callback and getattr(callback, "muticall", False):
+                    items.append(p)
+            self.producer_fifo = fifo(items)
         if not len(self.producer_fifo):
             return http_server.http_channel.close(self)
         elif not self.closing:
