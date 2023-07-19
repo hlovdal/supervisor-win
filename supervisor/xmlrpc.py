@@ -134,17 +134,17 @@ class DeferredXMLRPCResponse(object):
         outgoing_producer = producers.composite_producer(self.request.outgoing)
 
         # apply a few final transformations to the output
-        self.request.channel.push_with_producer(
-            # globbing gives us large packets
-            producers.globbing_producer(
-                # hooking lets us log the number of bytes sent
-                producers.hooked_producer(
-                    outgoing_producer,
-                    self.request.log
+        if not self.request.channel.closing:
+            self.request.channel.push_with_producer(
+                # globbing gives us large packets
+                producers.globbing_producer(
+                    # hooking lets us log the number of bytes sent
+                    producers.hooked_producer(
+                        outgoing_producer,
+                        self.request.log
+                    )
                 )
             )
-        )
-
         self.request.channel.current_request = None
 
         if close_it:

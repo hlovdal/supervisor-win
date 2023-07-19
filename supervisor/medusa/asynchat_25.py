@@ -260,6 +260,9 @@ class fifo(object):
         else:
             self.list = list
 
+    def __iter__(self):
+        return iter(self.list)
+
     def __len__(self):
         return len(self.list)
 

@@ -13,6 +13,7 @@ from supervisor.compat import urllib
 from supervisor.compat import sha1
 from supervisor.compat import as_bytes
 from supervisor.compat import as_string
+from supervisor.medusa.asynchat_25 import fifo
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.medusa import http_date
 from supervisor.medusa import http_server
@@ -354,6 +355,30 @@ class deferring_http_channel(http_server.http_channel):
                 return False
 
         return http_server.http_channel.writable(self)
+
+    def handle_write(self):
+        if self.closing:
+            # consumes the entire producer_fifo, after an abrupt closing of the connection.
+            self.refill_buffer()
+            if not len(self.producer_fifo):
+                self.close()
+            return
+        return http_server.http_channel.handle_write(self)
+
+    def handle_read(self):
+        if self.closing:
+            return
+        return http_server.http_channel.handle_read(self)
+
+    def close(self):
+        self.producer_fifo = fifo([
+            p for p in self.producer_fifo
+            if getattr(p.callback, "muticall", False)
+        ])
+        if not len(self.producer_fifo):
+            return http_server.http_channel.close(self)
+        elif not self.closing:
+            self.closing = True
 
     def refill_buffer(self):
         """ Implement deferreds """

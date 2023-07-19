@@ -314,6 +314,7 @@ class SupervisorNamespaceRPCInterface(object):
                 result = action.result
             return result
 
+        onwait.muticall = True
         onwait.delay = 0.05
         onwait.rpcinterface = self
         return onwait  # deferred
