@@ -47,6 +47,21 @@ from supervisor.states import (
 API_VERSION = '3.0'
 
 
+class TaskStatus(object):
+    """Assists in initiating a second call."""
+    def __init__(self, callback):
+        self.starting = False
+        self.callback = callback
+
+    @property
+    def result(self):
+        if callable(self.callback):
+            result = self.callback()
+        else:
+            result = self.callback
+        return result
+
+
 class SupervisorNamespaceRPCInterface(object):
     def __init__(self, supervisord):
         self.supervisord = supervisord
@@ -288,21 +303,8 @@ class SupervisorNamespaceRPCInterface(object):
         @return boolean result     Indicates whether the removal was successful
         """
 
-        class Action(object):
-            def __init__(self, callback):
-                self.starting = False
-                self.callback = callback
-
-            @property
-            def result(self):
-                if callable(self.callback):
-                    result = self.callback()
-                else:
-                    result = self.callback
-                return result
-
         callback = self.stopProcess(name, wait=wait)
-        action = Action(callback)
+        action = TaskStatus(callback)
 
         def onwait():
             result = action.result
@@ -599,6 +601,26 @@ class SupervisorNamespaceRPCInterface(object):
         result = signalall()
         self._update('signalAllProcesses')
         return result
+
+    def restartAllProcesses(self, wait=True):
+        """Restarts all processes."""
+        callback = self.stopAllProcesses(wait=wait)
+        action = TaskStatus(callback)
+
+        def onwait():
+            result = action.result
+            if result is NOT_DONE_YET:
+                return NOT_DONE_YET
+            elif not action.starting:
+                action.callback = self.startAllProcesses(wait=wait)
+                action.starting = True
+                result = action.result
+            return result
+
+        onwait.muticall = True
+        onwait.delay = 0.05
+        onwait.rpcinterface = self
+        return onwait
 
     def getAllConfigInfo(self):
         """ Get info about all available process configurations. Each struct
