@@ -1,3 +1,10 @@
+4.7.0
+-----------------------------
+- Merge supervisor unix changes from 4.3.0.dev0 (master).
+- Upgrading from pywin32 to python3 (issues/43).
+- Fix installation of services (issues/42).
+- https://github.com/alexsilva/supervisor/issues?q=is%3Aissue+is%3Aclosed
+
 4.6.0
 -----------------------------
 - Merge supervisor unix changes from 4.2.2.dev0 (master).
