@@ -258,6 +258,14 @@ class Supervisor(object):
                         raise
                     except:
                         combined_map[fd].handle_error()
+                else:
+                    # if the fd is not in combined_map, we should unregister it. otherwise,
+                    # it will be polled every time, which may cause 100% cpu usage
+                    self.options.logger.warn('unexpected read event from fd %r' % fd)
+                    try:
+                        self.options.poller.unregister_readable(fd)
+                    except:
+                        pass
 
             for fd in writables:
                 if fd in combined_map:
@@ -271,6 +279,12 @@ class Supervisor(object):
                         raise
                     except:
                         combined_map[fd].handle_error()
+                else:
+                    self.options.logger.warn('unexpected write event from fd %r' % fd)
+                    try:
+                        self.options.poller.unregister_writable(fd)
+                    except:
+                        pass
 
             for group in pgroups:
                 group.transition()
@@ -322,7 +336,7 @@ class Supervisor(object):
             self.options.remove_pid_history(pid)
         if not once:
             # keep reaping until no more kids to reap, but don't recurse
-            # infintely
+            # infinitely
             self.reap(once=False, recursionguard=recursionguard + 1)
 
     def handle_signal(self):

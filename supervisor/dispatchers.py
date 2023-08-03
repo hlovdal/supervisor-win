@@ -1,6 +1,6 @@
 import errno
-
-import warnings
+from supervisor.medusa.asynchat_25 import find_prefix_at_end
+from supervisor.medusa.asyncore_25 import compact_traceback
 
 from supervisor import loggers
 from supervisor.compat import as_string, as_bytes
@@ -8,16 +8,8 @@ from supervisor.events import EventRejectedEvent
 from supervisor.events import ProcessLogStderrEvent
 from supervisor.events import ProcessLogStdoutEvent
 from supervisor.events import notify
-from supervisor.medusa.asyncore_25 import compact_traceback
 from supervisor.states import EventListenerStates
 from supervisor.states import getEventListenerStateDescription
-
-
-def find_prefix_at_end(haystack, needle):
-    l = len(needle) - 1
-    while l and not haystack.endswith(needle[:l]):
-        l -= 1
-    return l
 
 
 class PDispatcher(object):

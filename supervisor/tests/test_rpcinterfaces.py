@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import unittest
 import errno
 import operator
 import os
@@ -6,7 +7,6 @@ import signal
 import sys
 import tempfile
 import time
-import unittest
 
 from supervisor.tests.base import TempFileOpen
 from supervisor.tests.base import DummyOptions
@@ -21,6 +21,7 @@ from supervisor.tests.base import _TIMEFORMAT
 
 from supervisor.compat import as_string, PY2
 from supervisor.datatypes import Automatic
+
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -2435,11 +2436,3 @@ class Test_make_main_rpcinterface(unittest.TestCase):
 class DummyRPCInterface:
     def hello(self):
         return 'Hello!'
-
-
-def test_suite():
-    return unittest.findTestCases(sys.modules[__name__])
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')

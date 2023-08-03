@@ -628,6 +628,40 @@ class SubprocessTests(unittest.TestCase):
         instance.stop_report()
         self.assertEqual(len(options.logger.data), 1) # throttled
 
+    def test_stop_report_laststopreport_in_future(self):
+        future_time = time.time() + 3600 # 1 hour into the future
+        options = DummyOptions()
+        config = DummyPConfig(options, 'test', '/test')
+        instance = self._makeOne(config)
+        instance.pid = 11
+        dispatcher = DummyDispatcher(writable=True)
+        instance.dispatchers = {'foo':dispatcher}
+        from supervisor.states import ProcessStates
+        instance.state = ProcessStates.STOPPING
+        instance.laststopreport = future_time
+
+        # This iteration of stop_report() should reset instance.laststopreport
+        # to the current time
+        instance.stop_report()
+
+        # No logging should have taken place
+        self.assertEqual(len(options.logger.data), 0)
+
+        # Ensure instance.laststopreport has rolled backward
+        self.assertTrue(instance.laststopreport < future_time)
+
+        # Sleep for 2 seconds
+        time.sleep(2)
+
+        # This iteration of stop_report() should actually trigger the report
+        instance.stop_report()
+
+        self.assertEqual(len(options.logger.data), 1)
+        self.assertEqual(options.logger.data[0], 'waiting for test to stop')
+        self.assertNotEqual(instance.laststopreport, 0)
+        instance.stop_report()
+        self.assertEqual(len(options.logger.data), 1) # throttled
+
     def test_give_up(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'test', '/test')
@@ -1424,7 +1458,7 @@ class SubprocessTests(unittest.TestCase):
         # Sleep for (startsecs + 1)
         time.sleep(test_startsecs + 1)
 
-        # This iteration of transition() should actaully trigger the state
+        # This iteration of transition() should actually trigger the state
         # transition to RUNNING
         process.transition()
 
@@ -1472,7 +1506,7 @@ class SubprocessTests(unittest.TestCase):
 
         time.sleep(0.01)  # now x execution
 
-        # This iteration of transition() should actaully trigger the state
+        # This iteration of transition() should actually trigger the state
         # transition to STARTING
         process.transition()
 

@@ -1,15 +1,17 @@
+import sys
 import base64
 import os
-import socket
 import stat
-import sys
+import socket
 import tempfile
 import unittest
+
+from supervisor.http import NOT_DONE_YET
 
 from supervisor.compat import as_bytes
 from supervisor.compat import as_string
 from supervisor.compat import sha1
-from supervisor.http import NOT_DONE_YET
+
 from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import PopulatedDummySupervisor
 from supervisor.tests.base import TempFileOpen
@@ -638,7 +640,7 @@ class TopLevelFunctionTests(unittest.TestCase):
                 if socketfile is not None:
                     os.unlink(socketfile)
         finally:
-            from asyncore import socket_map
+            from supervisor.medusa.asyncore_25 import socket_map
             socket_map.clear()
         return servers
 
@@ -700,10 +702,3 @@ class DummyProducer:
             return self.data.pop(0)
         else:
             return b''
-
-def test_suite():
-    return unittest.findTestCases(sys.modules[__name__])
-
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')

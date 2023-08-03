@@ -1,9 +1,7 @@
 import codecs
 import errno
 import getopt
-import glob
 import os
-import platform
 import re
 import signal
 import socket
@@ -11,9 +9,9 @@ import stat
 import sys
 import tempfile
 import threading
+import glob
+import platform
 import warnings
-
-import pkg_resources
 
 from supervisor import psutil
 from supervisor.compat import PY2
@@ -22,6 +20,7 @@ from supervisor.compat import as_bytes, as_string
 from supervisor.compat import xmlrpclib
 from supervisor.compat import StringIO
 from supervisor.compat import basestring
+from supervisor.compat import import_spec
 
 from supervisor.utils import raise_not_implemented
 from supervisor.medusa import asyncore_25 as asyncore
@@ -29,7 +28,6 @@ from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.datatypes import process_or_group_name
 from supervisor.datatypes import boolean
 from supervisor.datatypes import integer
-from supervisor.datatypes import name_to_uid
 from supervisor.datatypes import existing_dirpath
 from supervisor.datatypes import byte_size
 from supervisor.datatypes import signal_number
@@ -133,7 +131,6 @@ class Options(object):
         for path in self.searchpaths:
             if os.path.exists(path):
                 config = path
-                self.stdout.write("Chose default config file: %s\n" % config)
                 break
         if config is None and self.require_configfile:
             self.usage('No config file found at default paths (%s); '
@@ -383,7 +380,7 @@ class Options(object):
                                  (section, factory_key))
             try:
                 factory = self.import_spec(factory_spec)
-            except ImportError:
+            except (AttributeError, ImportError):
                 raise ValueError('%s cannot be resolved within [%s]' % (
                     factory_spec, section))
 
@@ -396,13 +393,8 @@ class Options(object):
         return factories
 
     def import_spec(self, spec):
-        ep = pkg_resources.EntryPoint.parse("x=" + spec)
-        if hasattr(ep, 'resolve'):
-            # this is available on setuptools >= 10.2
-            return ep.resolve()
-        else:
-            # this causes a DeprecationWarning on setuptools >= 11.3
-            return ep.load(False)
+        """On failure, raises either AttributeError or ImportError"""
+        return import_spec(spec)
 
     def read_include_config(self, fp, parser, expansions):
         if parser.has_section('include'):
@@ -753,7 +745,7 @@ class ServerOptions(Options):
                                  'supervisor.dispatchers:default_handler')
             try:
                 result_handler = self.import_spec(result_handler)
-            except ImportError:
+            except (AttributeError, ImportError):
                 raise ValueError('%s cannot be resolved within [%s]' % (
                     result_handler, section))
 
@@ -1197,10 +1189,10 @@ class ServerOptions(Options):
     def get_socket_map(self):
         return asyncore.socket_map
 
-    @raise_not_implemented
     def cleanup_fds(self):
-        """dummy"""
-        pass
+        # try to close any leaked file descriptors (for reload)
+        start = 5
+        os.closerange(start, self.minfds)
 
     def kill(self, pid, sig):
         try:

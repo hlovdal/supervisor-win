@@ -22,8 +22,11 @@ if py_version < (2, 7):
 elif (3, 0) < py_version < (3, 4):
     raise RuntimeError('On Python 3, Supervisor requires Python 3.4 or later')
 
-# pkg_resource is used in several places
-requires = ["setuptools"]
+# setuptools is required as a runtime dependency only on
+# Python < 3.8.  See the comments in supervisor/compat.py.
+requires = [
+    "setuptools; python_version < '3.8'",
+]
 
 if (2, 7) <= py_version < (3, 0):
     requires.append("pywin32==228")
@@ -31,9 +34,6 @@ else:
     requires.append("pywin32<=306,>228")
 
 tests_require = []
-if py_version < (3, 3):
-    tests_require.append('mock<4.0.0.dev0')
-
 testing_extras = tests_require + [
     'pytest',
     'pytest-cov',
@@ -70,6 +70,9 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 version_txt = os.path.join(here, 'supervisor/version.txt')
@@ -81,6 +84,11 @@ dist = setup(
     version=supervisor_version,
     license='BSD-derived (http://www.repoze.org/LICENSE.txt)',
     url='http://supervisord.org/',
+    project_urls={
+        'Changelog': 'http://supervisord.org/changelog',
+        'Documentation': 'http://supervisord.org',
+        'Issue Tracker': 'https://github.com/Supervisor/supervisor',
+    },
     description="A system for controlling process state under WINDOWS",
     long_description=README + '\n\n' + CHANGES,
     classifiers=CLASSIFIERS,
@@ -98,7 +106,7 @@ dist = setup(
     install_requires=requires,
     extras_require={
         'testing': testing_extras,
-        },
+    },
     tests_require=tests_require,
     include_package_data=True,
     zip_safe=False,
