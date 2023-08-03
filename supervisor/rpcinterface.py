@@ -603,7 +603,11 @@ class SupervisorNamespaceRPCInterface(object):
         return result
 
     def restartAllProcesses(self, wait=True):
-        """Restarts all processes."""
+        """Restarts all processes.
+
+        @param  boolean wait   Wait for each process to be fully stopped
+        @return boolean    Boolan result that indicates whether the operation was successful
+        """
         callback = self.stopAllProcesses(wait=wait)
         action = TaskStatus(callback)
 
