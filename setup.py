@@ -23,7 +23,12 @@ elif (3, 0) < py_version < (3, 4):
     raise RuntimeError('On Python 3, Supervisor requires Python 3.4 or later')
 
 # pkg_resource is used in several places
-requires = ["setuptools", "pywin32==228"]
+requires = ["setuptools"]
+
+if (2, 7) <= py_version < (3, 0):
+    requires.append("pywin32==228")
+else:
+    requires.append("pywin32<=306,>228")
 
 tests_require = []
 if py_version < (3, 3):
