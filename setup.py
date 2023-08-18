@@ -87,7 +87,7 @@ dist = setup(
     project_urls={
         'Changelog': 'http://supervisord.org/changelog',
         'Documentation': 'http://supervisord.org',
-        'Issue Tracker': 'https://github.com/Supervisor/supervisor',
+        'Issue Tracker': 'https://github.com/alexsilva/supervisor/issues',
     },
     description="A system for controlling process state under WINDOWS",
     long_description=README + '\n\n' + CHANGES,
