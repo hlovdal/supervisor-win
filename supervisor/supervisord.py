@@ -43,6 +43,7 @@ from supervisor.options import signame
 from supervisor import events
 from supervisor.states import SupervisorStates
 from supervisor.states import getProcessStateDescription
+from supervisor.utils import time_machine
 
 
 class Supervisor(object):
@@ -209,6 +210,7 @@ class Supervisor(object):
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
+        delay_secs = time_machine(self.options.delaysecs)
 
         while True:
             combined_map = {}
@@ -301,7 +303,7 @@ class Supervisor(object):
 
             try:
                 # Avoid overloading the processor
-                time.sleep(self.options.delaysecs)
+                next(delay_secs)
             except IOError:
                 continue
 
