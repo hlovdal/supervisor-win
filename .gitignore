@@ -16,6 +16,7 @@ docs/.build/
 dist/
 env*/
 venv*/
+pyenv*/
 htmlcov/
 tmp/
 coverage.xml
